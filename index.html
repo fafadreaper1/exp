@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pranktag</title>
+
+<style>
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", sans-serif;
+  background: none;
+}
+
+/* Контейнер */
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Фон */
+.background {
+  position: absolute;
+  inset: 0;
+  background-image: url('image.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: blur(25px) brightness(0.9);
+  transform: scale(1.1);
+  z-index: -2;
+}
+
+/* Затемнение */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+  z-index: -1;
+}
+
+/* Центральная картинка */
+.circle-img {
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  background-image: url('image.jpg');
+  background-size: cover;
+  background-position: center;
+  border: 6px solid rgba(255,255,255,0.8);
+  box-shadow: 0 0 40px rgba(255,255,255,0.6);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1;
+}
+
+.circle-img:hover {
+  transform: scale(1.07);
+  box-shadow: 0 0 60px rgba(255,255,255,0.8);
+}
+
+/* Кнопка */
+.telegram-btn {
+  position: absolute;
+  bottom: 40px;
+  padding: 12px 26px;
+  font-size: 18px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffffffaa, #ffffffcc);
+  border: 2px solid rgba(255,255,255,0.7);
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  color: #111;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  z-index: 2;
+}
+
+.telegram-btn:hover {
+  transform: scale(1.05);
+}
+
+/* ================= ВЗРЫВ (WEBM С ПРОЗРАЧНОСТЬЮ) ================= */
+
+.boom-video {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+}
+
+/* лёгкий удар камеры */
+.boom-video.show {
+  opacity: 1;
+  animation: boomHit 0.22s ease-out 1;
+}
+
+@keyframes boomHit {
+  0%   { transform: scale(1); filter: blur(0px); }
+  40%  { transform: scale(1.03); filter: blur(0.6px); }
+  100% { transform: scale(1); filter: blur(0px); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+  <div class="background"></div>
+  <div class="overlay"></div>
+
+  <div class="circle-img"></div>
+
+  <a class="telegram-btn" href="https://t.me/pranktag" target="_blank">
+    🔇 ЗАГЛУШИТЬ ЗВУК
+  </a>
+
+  <audio id="myAudio" loop>
+    <source src="audio.mp3" type="audio/mpeg">
+  </audio>
+</div>
+
+<!-- ВЗРЫВ: WebM VP9 + Alpha -->
+<video
+  id="boomVideo"
+  class="boom-video"
+  muted
+  playsinline
+  preload="auto">
+  <source src="explosion.webm" type="video/webm">
+</video>
+
+<script>
+const audio = document.getElementById('myAudio');
+const boomVideo = document.getElementById('boomVideo');
+
+function playBoom() {
+  // перезапуск видео
+  boomVideo.pause();
+  boomVideo.currentTime = 0;
+
+  // показать слой
+  boomVideo.classList.remove('show');
+  void boomVideo.offsetWidth;
+  boomVideo.classList.add('show');
+
+  // play
+  const p = boomVideo.play();
+  if (p && p.catch) {
+    p.catch(() => boomVideo.classList.remove('show'));
+  }
+
+  // убрать после окончания
+  boomVideo.onended = () => {
+    boomVideo.classList.remove('show');
+  };
+
+  // фолбек
+  setTimeout(() => boomVideo.classList.remove('show'), 2500);
+}
+
+document.body.addEventListener('click', () => {
+  // звук
+  if (audio.paused) audio.play();
+  else {
+    audio.currentTime = 0;
+    audio.play();
+  }
+
+  // взрыв
+  playBoom();
+});
+</script>
+
+</body>
+</html>
