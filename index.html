@@ -6,9 +6,7 @@
 <title>pranktag</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
   margin: 0;
@@ -69,7 +67,7 @@ html, body {
   box-shadow: 0 0 60px rgba(255,255,255,0.8);
 }
 
-/* Кнопка Telegram */
+/* Кнопка */
 .telegram-btn {
   position: absolute;
   bottom: 40px;
@@ -77,7 +75,7 @@ html, body {
   font-size: 18px;
   font-weight: 600;
   background: linear-gradient(135deg, #ffffffaa, #ffffffcc);
-  border: 2px solid rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(255,255,255,0.7);
   border-radius: 50px;
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
@@ -91,7 +89,7 @@ html, body {
   transform: scale(1.05);
 }
 
-/* ================= ВЗРЫВ (каждый клик — новый video) ================= */
+/* ================= ВЗРЫВ (WEBM С ПРОЗРАЧНОСТЬЮ) ================= */
 
 .boom-video {
   position: fixed;
@@ -101,6 +99,13 @@ html, body {
   object-fit: cover;
   pointer-events: none;
   z-index: 9999;
+  opacity: 0;
+  mix-blend-mode:screen;
+}
+
+/* лёгкий удар камеры */
+.boom-video.show {
+  opacity: 1;
   animation: boomHit 0.22s ease-out 1;
 }
 
@@ -129,55 +134,61 @@ html, body {
   </audio>
 </div>
 
+<!-- ВЗРЫВ: WebM VP9 + Alpha -->
+<video
+  id="boomVideo"
+  class="boom-video"
+  muted
+  playsinline
+  preload="auto">
+  <source src="explosion.webm" type="video/webm">
+</video>
+
 <script>
 const audio = document.getElementById('myAudio');
+const boomVideo = document.getElementById('boomVideo');
 
-/*
-  КЛЮЧЕВОЙ ФИКС:
-  каждый клик → создаём НОВЫЙ <video>,
-  проигрываем → удаляем
-*/
-function spawnExplosion() {
-  const video = document.createElement('video');
-  video.className = 'boom-video';
-  video.src = 'explosion.webm';
-  video.muted = true;
-  video.playsInline = true;
-  video.preload = 'auto';
+function playBoom() {
+  // перезапуск видео
+  boomVideo.pause();
+  boomVideo.currentTime = 0;
 
-  document.body.appendChild(video);
+  // показать слой
+  boomVideo.classList.remove('show');
+  void boomVideo.offsetWidth;
+  boomVideo.classList.add('show');
 
-  const cleanup = () => {
-    try { video.pause(); } catch(e){}
-    video.remove();
+  // play
+  const p = boomVideo.play();
+  if (p && p.catch) {
+    p.catch(() => boomVideo.classList.remove('show'));
+  }
+
+  // убрать после окончания
+  boomVideo.onended = () => {
+    boomVideo.classList.remove('show');
   };
 
-  video.addEventListener('ended', cleanup, { once: true });
-  video.addEventListener('error', cleanup, { once: true });
-
-  // фолбек, если ended не сработал
-  setTimeout(cleanup, 3000);
-
-  const p = video.play();
-  if (p && p.catch) p.catch(cleanup);
+  // фолбек
+  setTimeout(() => boomVideo.classList.remove('show'), 2500);
 }
 
-document.body.addEventListener('click', (e) => {
+document.body.addEventListener('click', () => {
   // звук
-  if (audio.paused) {
-    audio.play();
-  } else {
+  if (audio.paused) audio.play();
+  else {
     audio.currentTime = 0;
     audio.play();
   }
 
   // взрыв
-  spawnExplosion();
+  playBoom();
 });
 </script>
 
 </body>
 </html>
+
 
 
 
