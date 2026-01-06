@@ -89,7 +89,7 @@ html, body {
   transform: scale(1.05);
 }
 
-/* ================= ВЗРЫВ (WEBM С ПРОЗРАЧНОСТЬЮ) ================= */
+/* ================= ВЗРЫВ ================= */
 
 .boom-video {
   position: fixed;
@@ -99,13 +99,10 @@ html, body {
   object-fit: cover;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0;
-  mix-blend-mode:screen;
-}
 
-/* лёгкий удар камеры */
-.boom-video.show {
-  opacity: 1;
+  /* убирает чёрный фон на айфонах максимально возможно */
+  mix-blend-mode: screen;
+
   animation: boomHit 0.22s ease-out 1;
 }
 
@@ -134,60 +131,60 @@ html, body {
   </audio>
 </div>
 
-<!-- ВЗРЫВ: WebM VP9 + Alpha -->
-<video
-  id="boomVideo"
-  class="boom-video"
-  muted
-  playsinline
-  preload="auto">
-  <source src="explosion.webm" type="video/webm">
-</video>
-
 <script>
 const audio = document.getElementById('myAudio');
-const boomVideo = document.getElementById('boomVideo');
 
+/*
+  ФИКС:
+  каждый клик → новый <video>
+  play → удалить
+  так делают все FX-сайты
+*/
 function playBoom() {
-  // перезапуск видео
-  boomVideo.pause();
-  boomVideo.currentTime = 0;
+  const video = document.createElement('video');
+  video.className = 'boom-video';
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
 
-  // показать слой
-  boomVideo.classList.remove('show');
-  void boomVideo.offsetWidth;
-  boomVideo.classList.add('show');
+  // уникальный URL, чтобы браузер не залипал
+  video.src = 'explosion.webm?v=' + Date.now();
 
-  // play
-  const p = boomVideo.play();
-  if (p && p.catch) {
-    p.catch(() => boomVideo.classList.remove('show'));
-  }
+  document.body.appendChild(video);
 
-  // убрать после окончания
-  boomVideo.onended = () => {
-    boomVideo.classList.remove('show');
+  const cleanup = () => {
+    if (!video.isConnected) return;
+    try { video.pause(); } catch(e){}
+    video.remove();
   };
 
+  video.addEventListener('ended', cleanup, { once: true });
+  video.addEventListener('error', cleanup, { once: true });
+
   // фолбек
-  setTimeout(() => boomVideo.classList.remove('show'), 2500);
+  setTimeout(cleanup, 3000);
+
+  const p = video.play();
+  if (p && p.catch) p.catch(cleanup);
 }
 
 document.body.addEventListener('click', () => {
   // звук
-  if (audio.paused) audio.play();
-  else {
+  if (audio.paused) {
+    audio.play();
+  } else {
     audio.currentTime = 0;
     audio.play();
   }
 
-  // взрыв
+  // взрыв на каждый клик
   playBoom();
 });
 </script>
 
 </body>
 </html>
+
 
 
 
