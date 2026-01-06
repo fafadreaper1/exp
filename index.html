@@ -6,7 +6,9 @@
 <title>pranktag</title>
 
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html, body {
   margin: 0;
@@ -17,6 +19,7 @@ html, body {
   background: none;
 }
 
+/* Контейнер */
 .wrapper {
   position: relative;
   width: 100%;
@@ -27,6 +30,7 @@ html, body {
   cursor: pointer;
 }
 
+/* Фон */
 .background {
   position: absolute;
   inset: 0;
@@ -38,6 +42,7 @@ html, body {
   z-index: -2;
 }
 
+/* Затемнение */
 .overlay {
   position: absolute;
   inset: 0;
@@ -45,6 +50,7 @@ html, body {
   z-index: -1;
 }
 
+/* Центральная картинка */
 .circle-img {
   width: 230px;
   height: 230px;
@@ -63,6 +69,7 @@ html, body {
   box-shadow: 0 0 60px rgba(255,255,255,0.8);
 }
 
+/* Кнопка Telegram */
 .telegram-btn {
   position: absolute;
   bottom: 40px;
@@ -70,7 +77,7 @@ html, body {
   font-size: 18px;
   font-weight: 600;
   background: linear-gradient(135deg, #ffffffaa, #ffffffcc);
-  border: 2px solid rgba(255,255,255,0.7);
+  border: 2px solid rgba(255, 255, 255, 0.7);
   border-radius: 50px;
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
@@ -79,10 +86,14 @@ html, body {
   transition: all 0.25s ease;
   z-index: 2;
 }
-.telegram-btn:hover { transform: scale(1.05); }
 
-/* ===== ЭФФЕКТ ВЗРЫВА (общая геометрия) ===== */
-.boom-video, .boom-img {
+.telegram-btn:hover {
+  transform: scale(1.05);
+}
+
+/* ================= ВЗРЫВ (каждый клик — новый video) ================= */
+
+.boom-video {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -90,16 +101,6 @@ html, body {
   object-fit: cover;
   pointer-events: none;
   z-index: 9999;
-  opacity: 1;
-  animation: boomHit 0.22s ease-out 1;
-}
-
-.boom-img {
-  opacity: 0; /* показываем только когда .show */
-}
-
-.boom-img.show {
-  opacity: 1;
   animation: boomHit 0.22s ease-out 1;
 }
 
@@ -128,21 +129,15 @@ html, body {
   </audio>
 </div>
 
-<!-- iPhone-фолбек: анимированный WebP с прозрачностью -->
-<img id="boomImg" class="boom-img" src="explosion.webp" alt="boom" />
-
 <script>
 const audio = document.getElementById('myAudio');
-const boomImg = document.getElementById('boomImg');
 
-function isIOS() {
-  // iPhone/iPad (включая iPadOS, который маскируется под Mac)
-  return /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-}
-
-/* ПК/Android: каждый клик — новый <video> (чтобы не залипало) */
-function spawnExplosionWebM() {
+/*
+  КЛЮЧЕВОЙ ФИКС:
+  каждый клик → создаём НОВЫЙ <video>,
+  проигрываем → удаляем
+*/
+function spawnExplosion() {
   const video = document.createElement('video');
   video.className = 'boom-video';
   video.src = 'explosion.webm';
@@ -159,39 +154,31 @@ function spawnExplosionWebM() {
 
   video.addEventListener('ended', cleanup, { once: true });
   video.addEventListener('error', cleanup, { once: true });
+
+  // фолбек, если ended не сработал
   setTimeout(cleanup, 3000);
 
   const p = video.play();
   if (p && p.catch) p.catch(cleanup);
 }
 
-/* iPhone: показываем animated WebP и перезапускаем его */
-function spawnExplosionWebP() {
-  boomImg.classList.remove('show');
-
-  // перезапуск анимации (перезагрузка src)
-  boomImg.src = '';
-  boomImg.src = 'explosion.webp';
-
-  void boomImg.offsetWidth;
-  boomImg.classList.add('show');
-
-  // подгони под длительность твоего взрыва
-  setTimeout(() => boomImg.classList.remove('show'), 1500);
-}
-document.body.addEventListener('click', () => {
+document.body.addEventListener('click', (e) => {
   // звук
-  if (audio.paused) audio.play();
-  else { audio.currentTime = 0; audio.play(); }
+  if (audio.paused) {
+    audio.play();
+  } else {
+    audio.currentTime = 0;
+    audio.play();
+  }
 
   // взрыв
-  if (isIOS()) spawnExplosionWebP();
-  else spawnExplosionWebM();
+  spawnExplosion();
 });
 </script>
 
 </body>
 </html>
+
 
 
 
